@@ -55,7 +55,7 @@ class LoadDataset(object):
             'val': DataLoader(
                 test_set,
                 batch_size=self.params.batch_size,
-                collate_fn=test_set.collate,
+                collate_fn=val_set.collate,
                 shuffle=False,
             ),
             'test': DataLoader(
