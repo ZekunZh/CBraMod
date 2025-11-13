@@ -4,7 +4,7 @@ import os
 import lmdb
 import pickle
 
-root_dir = '/data/datasets/BigDownstream/MODMA/files'
+root_dir = '/data/datasets/shu_datasets/mat'
 files = [file for file in os.listdir(root_dir)]
 files = sorted(files)
 # print(files)
