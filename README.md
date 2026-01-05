@@ -1,9 +1,9 @@
 <div align="center">
 
-# CBraMod
+# DeeperBrain
 
 
-_A Criss-Cross Brain Foundation Model for EEG Decoding_
+_A Neuro-Grounded EEG Foundation Model Towards Universal BCI_
 
 
 [![Paper](https://img.shields.io/badge/arXiv-2412.07236-red)](https://arxiv.org/abs/2412.07236)
@@ -15,7 +15,7 @@ _A Criss-Cross Brain Foundation Model for EEG Decoding_
 
 
 <div align="center">
-<img src="figure/CBraMod_logo.png" style="width: 15%;" />
+<img src="figure/logo.png" style="width: 15%;" />
 </div>
 
 

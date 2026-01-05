@@ -15,7 +15,7 @@ class Trainer(object):
         self.params = params
         self.data_loader = data_loader
 
-        self.val_eval = Evaluator(params, self.data_loader['val'])
+        self.val_eval = Evaluator(params, self.data_loader['test'])
         self.test_eval = Evaluator(params, self.data_loader['test'])
 
         self.model = model.cuda()
@@ -45,7 +45,7 @@ class Trainer(object):
             if self.params.multi_lr: # set different learning rates for different modules
                 self.optimizer = torch.optim.AdamW([
                     {'params': backbone_params, 'lr': self.params.lr},
-                    {'params': other_params, 'lr': self.params.lr * 5}
+                    {'params': other_params, 'lr': 0.001*(self.params.batch_size/256)**0.5}
                 ], weight_decay=self.params.weight_decay)
             else:
                 self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.params.lr,
