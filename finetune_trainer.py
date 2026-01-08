@@ -15,7 +15,7 @@ class Trainer(object):
         self.params = params
         self.data_loader = data_loader
 
-        self.val_eval = Evaluator(params, self.data_loader['test'])
+        self.val_eval = Evaluator(params, self.data_loader['val'])
         self.test_eval = Evaluator(params, self.data_loader['test'])
 
         self.model = model.cuda()
