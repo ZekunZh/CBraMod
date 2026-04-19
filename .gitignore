@@ -45,3 +45,6 @@ tuab-process-error-files.txt
 
 # Antigravity/Gemini internals (if any leak in)
 .gemini/
+
+# Environment variables (secrets for API keys, etc.)
+.env

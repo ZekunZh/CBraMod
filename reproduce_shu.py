@@ -23,6 +23,7 @@ import lmdb
 import numpy as np
 import torch
 import torch.nn as nn
+from dotenv import load_dotenv
 from einops.layers.torch import Rearrange
 from sklearn.metrics import (
     auc,
@@ -40,7 +41,9 @@ from tqdm import tqdm
 # ---------------------------------------------------------------------------
 import wandb
 
-WANDB_API_KEY = "WANDB_API_KEY_REDACTED"
+load_dotenv()
+
+WANDB_API_KEY = os.getenv("WANDB_API_KEY")
 
 
 # ===========================================================================
@@ -301,7 +304,6 @@ def train(args: argparse.Namespace) -> None:
     )
 
     # ---------- wandb ----------
-    os.environ["WANDB_API_KEY"] = WANDB_API_KEY
     wandb.init(
         project="CBraMod-SHU-MI",
         name=f"shu_reproduce_seed{args.seed}_bs{args.batch_size}_lr{args.lr}",
