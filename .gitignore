@@ -1,1 +1,47 @@
-.idea
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Data & Large Weights
+data/
+pretrained_weights/
+*.pth
+*.mdb
+*.lock
+
+# Training Artifacts
+wandb/
+results/*.pth
+results/*.log
+
+# Logs and Debug
+*.log
+nohup.out
+tuab-process-error-files.txt
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+
+# Antigravity/Gemini internals (if any leak in)
+.gemini/
