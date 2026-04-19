@@ -1,35 +1,56 @@
+import os
+import pickle
+
+import lmdb
+import mne
 import scipy
 from scipy import signal
-import os
-import lmdb
-import pickle
-import mne
 
-root_dir = '/data/datasets/BigDownstream/mental-arithmetic/edf'
+root_dir = "/data/datasets/BigDownstream/mental-arithmetic/edf"
 files = [file for file in os.listdir(root_dir)]
 files = sorted(files)
 print(files)
 
 files_dict = {
-    'train':files[:56],
-    'val':files[56:64],
-    'test':files[64:],
+    "train": files[:56],
+    "val": files[56:64],
+    "test": files[64:],
 }
 print(files_dict)
 dataset = {
-    'train': list(),
-    'val': list(),
-    'test': list(),
+    "train": list(),
+    "val": list(),
+    "test": list(),
 }
 
 
-selected_channels = ['EEG Fp1', 'EEG Fp2', 'EEG F3', 'EEG F4', 'EEG F7', 'EEG F8', 'EEG T3', 'EEG T4',
-                     'EEG C3', 'EEG C4', 'EEG T5', 'EEG T6', 'EEG P3', 'EEG P4', 'EEG O1', 'EEG O2',
-                     'EEG Fz', 'EEG Cz', 'EEG Pz', 'EEG A2-A1']
+selected_channels = [
+    "EEG Fp1",
+    "EEG Fp2",
+    "EEG F3",
+    "EEG F4",
+    "EEG F7",
+    "EEG F8",
+    "EEG T3",
+    "EEG T4",
+    "EEG C3",
+    "EEG C4",
+    "EEG T5",
+    "EEG T6",
+    "EEG P3",
+    "EEG P4",
+    "EEG O1",
+    "EEG O2",
+    "EEG Fz",
+    "EEG Cz",
+    "EEG Pz",
+    "EEG A2-A1",
+]
 
 
-
-db = lmdb.open('/data/datasets/BigDownstream/mental-arithmetic/processed', map_size=1000000000)
+db = lmdb.open(
+    "/data/datasets/BigDownstream/mental-arithmetic/processed", map_size=1000000000
+)
 for files_key in files_dict.keys():
     for file in files_dict[files_key]:
         raw = mne.io.read_raw_edf(os.path.join(root_dir, file), preload=True)
@@ -37,7 +58,7 @@ for files_key in files_dict.keys():
         raw.reorder_channels(selected_channels)
         raw.resample(200)
 
-        eeg = raw.get_data(units='uV')
+        eeg = raw.get_data(units="uV")
         chs, points = eeg.shape
         a = points % (5 * 200)
         if a != 0:
@@ -46,17 +67,15 @@ for files_key in files_dict.keys():
         label = int(file[-5])
 
         for i, sample in enumerate(eeg):
-            sample_key = f'{file[:-4]}-{i}'
+            sample_key = f"{file[:-4]}-{i}"
             # print(sample_key)
-            data_dict = {
-                'sample':sample, 'label':label-1
-            }
+            data_dict = {"sample": sample, "label": label - 1}
             txn = db.begin(write=True)
             txn.put(key=sample_key.encode(), value=pickle.dumps(data_dict))
             txn.commit()
             dataset[files_key].append(sample_key)
 
 txn = db.begin(write=True)
-txn.put(key='__keys__'.encode(), value=pickle.dumps(dataset))
+txn.put(key="__keys__".encode(), value=pickle.dumps(dataset))
 txn.commit()
 db.close()

@@ -1,14 +1,15 @@
+import _pickle as cPickle
+import bz2
+import copy
+import multiprocessing as mp
 import os
+import pickle
+import shutil
 from collections import defaultdict
+
+import numpy as np
 import pyedflib
 import pyedflib.highlevel as hl
-import numpy as np
-import copy
-import shutil
-import bz2
-import pickle
-import _pickle as cPickle
-import multiprocessing as mp
 
 
 # Pickle a file and then compress it into a file with extension
@@ -232,7 +233,9 @@ def start_process(pacient, num, start, end, sum_ind):
 
 # PARAMETERS
 signals_path = r"/data/datasets/chb-mit-scalp-eeg-database-1.0.0"  # Path to the data main directory
-clean_path = r"/data/datasets/BigDownstream/chb-mit/processed"  # Path where to store clean data
+clean_path = (
+    r"/data/datasets/BigDownstream/chb-mit/processed"  # Path where to store clean data
+)
 
 if not os.path.exists(clean_path):
     os.makedirs(clean_path)
@@ -275,8 +278,6 @@ parameters = [
 # parameters = [
 #     ("12", "")
 # ]
-
-
 
 
 with mp.Pool(mp.cpu_count()) as pool:

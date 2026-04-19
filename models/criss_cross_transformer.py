@@ -1,16 +1,24 @@
 import copy
-from typing import Optional, Any, Union, Callable
+
+# import torch.nn.functional as F
+import warnings
+from typing import Any, Callable, Optional, Union
 
 import torch
 import torch.nn as nn
-# import torch.nn.functional as F
-import warnings
 from torch import Tensor
 from torch.nn import functional as F
 
 
 class TransformerEncoder(nn.Module):
-    def __init__(self, encoder_layer, num_layers, norm=None, enable_nested_tensor=True, mask_check=True):
+    def __init__(
+        self,
+        encoder_layer,
+        num_layers,
+        norm=None,
+        enable_nested_tensor=True,
+        mask_check=True,
+    ):
         super().__init__()
         torch._C._log_api_usage_once(f"torch.nn.modules.{self.__class__.__name__}")
         self.layers = _get_clones(encoder_layer, num_layers)
@@ -18,12 +26,12 @@ class TransformerEncoder(nn.Module):
         self.norm = norm
 
     def forward(
-            self,
-            src: Tensor,
-            mask: Optional[Tensor] = None,
-            src_key_padding_mask: Optional[Tensor] = None,
-            is_causal: Optional[bool] = None) -> Tensor:
-
+        self,
+        src: Tensor,
+        mask: Optional[Tensor] = None,
+        src_key_padding_mask: Optional[Tensor] = None,
+        is_causal: Optional[bool] = None,
+    ) -> Tensor:
         output = src
         for mod in self.layers:
             output = mod(output, src_mask=mask)
@@ -33,20 +41,40 @@ class TransformerEncoder(nn.Module):
 
 
 class TransformerEncoderLayer(nn.Module):
-    __constants__ = ['norm_first']
+    __constants__ = ["norm_first"]
 
-    def __init__(self, d_model: int, nhead: int, dim_feedforward: int = 2048, dropout: float = 0.1,
-                 activation: Union[str, Callable[[Tensor], Tensor]] = F.relu,
-                 layer_norm_eps: float = 1e-5, batch_first: bool = False, norm_first: bool = False,
-                 bias: bool = True, device=None, dtype=None) -> None:
-        factory_kwargs = {'device': device, 'dtype': dtype}
+    def __init__(
+        self,
+        d_model: int,
+        nhead: int,
+        dim_feedforward: int = 2048,
+        dropout: float = 0.1,
+        activation: Union[str, Callable[[Tensor], Tensor]] = F.relu,
+        layer_norm_eps: float = 1e-5,
+        batch_first: bool = False,
+        norm_first: bool = False,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+    ) -> None:
+        factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
-        self.self_attn_s = nn.MultiheadAttention(d_model//2, nhead // 2, dropout=dropout,
-                                                 bias=bias, batch_first=batch_first,
-                                                 **factory_kwargs)
-        self.self_attn_t = nn.MultiheadAttention(d_model//2, nhead // 2, dropout=dropout,
-                                                 bias=bias, batch_first=batch_first,
-                                                 **factory_kwargs)
+        self.self_attn_s = nn.MultiheadAttention(
+            d_model // 2,
+            nhead // 2,
+            dropout=dropout,
+            bias=bias,
+            batch_first=batch_first,
+            **factory_kwargs,
+        )
+        self.self_attn_t = nn.MultiheadAttention(
+            d_model // 2,
+            nhead // 2,
+            dropout=dropout,
+            bias=bias,
+            batch_first=batch_first,
+            **factory_kwargs,
+        )
 
         # Implementation of Feedforward model
         self.linear1 = nn.Linear(d_model, dim_feedforward, bias=bias, **factory_kwargs)
@@ -75,40 +103,60 @@ class TransformerEncoderLayer(nn.Module):
 
     def __setstate__(self, state):
         super().__setstate__(state)
-        if not hasattr(self, 'activation'):
+        if not hasattr(self, "activation"):
             self.activation = F.relu
 
-
     def forward(
-            self,
-            src: Tensor,
-            src_mask: Optional[Tensor] = None,
-            src_key_padding_mask: Optional[Tensor] = None,
-            is_causal: bool = False) -> Tensor:
-
+        self,
+        src: Tensor,
+        src_mask: Optional[Tensor] = None,
+        src_key_padding_mask: Optional[Tensor] = None,
+        is_causal: bool = False,
+    ) -> Tensor:
         x = src
-        x = x + self._sa_block(self.norm1(x), src_mask, src_key_padding_mask, is_causal=is_causal)
+        x = x + self._sa_block(
+            self.norm1(x), src_mask, src_key_padding_mask, is_causal=is_causal
+        )
         x = x + self._ff_block(self.norm2(x))
         return x
 
     # self-attention block
-    def _sa_block(self, x: Tensor,
-                  attn_mask: Optional[Tensor], key_padding_mask: Optional[Tensor], is_causal: bool = False) -> Tensor:
+    def _sa_block(
+        self,
+        x: Tensor,
+        attn_mask: Optional[Tensor],
+        key_padding_mask: Optional[Tensor],
+        is_causal: bool = False,
+    ) -> Tensor:
         bz, ch_num, patch_num, patch_size = x.shape
-        xs = x[:, :, :, :patch_size // 2]
-        xt = x[:, :, :, patch_size // 2:]
-        xs = xs.transpose(1, 2).contiguous().view(bz*patch_num, ch_num, patch_size // 2)
-        xt = xt.contiguous().view(bz*ch_num, patch_num, patch_size // 2)
-        xs = self.self_attn_s(xs, xs, xs,
-                             attn_mask=attn_mask,
-                             key_padding_mask=key_padding_mask,
-                             need_weights=False)[0]
-        xs = xs.contiguous().view(bz, patch_num, ch_num, patch_size//2).transpose(1, 2)
-        xt = self.self_attn_t(xt, xt, xt,
-                              attn_mask=attn_mask,
-                              key_padding_mask=key_padding_mask,
-                              need_weights=False)[0]
-        xt = xt.contiguous().view(bz, ch_num, patch_num, patch_size//2)
+        xs = x[:, :, :, : patch_size // 2]
+        xt = x[:, :, :, patch_size // 2 :]
+        xs = (
+            xs.transpose(1, 2)
+            .contiguous()
+            .view(bz * patch_num, ch_num, patch_size // 2)
+        )
+        xt = xt.contiguous().view(bz * ch_num, patch_num, patch_size // 2)
+        xs = self.self_attn_s(
+            xs,
+            xs,
+            xs,
+            attn_mask=attn_mask,
+            key_padding_mask=key_padding_mask,
+            need_weights=False,
+        )[0]
+        xs = (
+            xs.contiguous().view(bz, patch_num, ch_num, patch_size // 2).transpose(1, 2)
+        )
+        xt = self.self_attn_t(
+            xt,
+            xt,
+            xt,
+            attn_mask=attn_mask,
+            key_padding_mask=key_padding_mask,
+            need_weights=False,
+        )[0]
+        xt = xt.contiguous().view(bz, ch_num, patch_num, patch_size // 2)
         x = torch.concat((xs, xt), dim=3)
         return self.dropout1(x)
 
@@ -116,7 +164,6 @@ class TransformerEncoderLayer(nn.Module):
     def _ff_block(self, x: Tensor) -> Tensor:
         x = self.linear2(self.dropout(self.activation(self.linear1(x))))
         return self.dropout2(x)
-
 
 
 def _get_activation_fn(activation: str) -> Callable[[Tensor], Tensor]:
@@ -127,16 +174,13 @@ def _get_activation_fn(activation: str) -> Callable[[Tensor], Tensor]:
 
     raise RuntimeError(f"activation should be relu/gelu, not {activation}")
 
+
 def _get_clones(module, N):
     # FIXME: copy.deepcopy() is not defined on nn.module
     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
 
 
-def _get_seq_len(
-        src: Tensor,
-        batch_first: bool
-) -> Optional[int]:
-
+def _get_seq_len(src: Tensor, batch_first: bool) -> Optional[int]:
     if src.is_nested:
         return None
     else:
@@ -151,9 +195,9 @@ def _get_seq_len(
 
 
 def _detect_is_causal_mask(
-        mask: Optional[Tensor],
-        is_causal: Optional[bool] = None,
-        size: Optional[int] = None,
+    mask: Optional[Tensor],
+    is_causal: Optional[bool] = None,
+    size: Optional[int] = None,
 ) -> bool:
     """Return whether the given attention mask is causal.
 
@@ -175,12 +219,13 @@ def _detect_is_causal_mask(
        Otherwise, checks for any causal mask.
     """
     # Prevent type refinement
-    make_causal = (is_causal is True)
+    make_causal = is_causal is True
 
     if is_causal is None and mask is not None:
         sz = size if size is not None else mask.size(-2)
         causal_comparison = _generate_square_subsequent_mask(
-            sz, device=mask.device, dtype=mask.dtype)
+            sz, device=mask.device, dtype=mask.dtype
+        )
 
         # Do not use `torch.equal` so we handle batched masks by
         # broadcasting the comparison.
@@ -193,25 +238,33 @@ def _detect_is_causal_mask(
 
 
 def _generate_square_subsequent_mask(
-        sz: int,
-        device: torch.device = torch.device(torch._C._get_default_device()),  # torch.device('cpu'),
-        dtype: torch.dtype = torch.get_default_dtype(),
+    sz: int,
+    device: torch.device = torch.device(
+        torch._C._get_default_device()
+    ),  # torch.device('cpu'),
+    dtype: torch.dtype = torch.get_default_dtype(),
 ) -> Tensor:
     r"""Generate a square causal mask for the sequence. The masked positions are filled with float('-inf').
-        Unmasked positions are filled with float(0.0).
+    Unmasked positions are filled with float(0.0).
     """
     return torch.triu(
-        torch.full((sz, sz), float('-inf'), dtype=dtype, device=device),
+        torch.full((sz, sz), float("-inf"), dtype=dtype, device=device),
         diagonal=1,
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     encoder_layer = TransformerEncoderLayer(
-        d_model=256, nhead=4, dim_feedforward=1024, batch_first=True, norm_first=True,
-        activation=F.gelu
+        d_model=256,
+        nhead=4,
+        dim_feedforward=1024,
+        batch_first=True,
+        norm_first=True,
+        activation=F.gelu,
     )
-    encoder = TransformerEncoder(encoder_layer, num_layers=2, enable_nested_tensor=False)
+    encoder = TransformerEncoder(
+        encoder_layer, num_layers=2, enable_nested_tensor=False
+    )
     encoder = encoder.cuda()
 
     a = torch.randn((4, 19, 30, 256)).cuda()

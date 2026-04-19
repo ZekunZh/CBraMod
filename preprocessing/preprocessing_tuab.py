@@ -1,9 +1,9 @@
 import os
 import pickle
-
 from multiprocessing import Pool
-import numpy as np
+
 import mne
+import numpy as np
 
 # we need these channels
 # (signals[signal_names['EEG FP1-REF']] - signals[signal_names['EEG F7-REF']],  # 0
@@ -57,7 +57,7 @@ def split_and_dump(params):
             raw.filter(l_freq=0.3, h_freq=75)
             raw.notch_filter((60))
             ch_name = raw.ch_names
-            raw_data = raw.get_data(units='uV')
+            raw_data = raw.get_data(units="uV")
             channeled_data = raw_data.copy()[:16]
             try:
                 channeled_data[0] = (
@@ -159,8 +159,8 @@ if __name__ == "__main__":
         train_val_a_sub[: int(len(train_val_a_sub) * 0.8)],
         train_val_a_sub[int(len(train_val_a_sub) * 0.8) :],
     )
-    print('train_a_sub:', train_a_sub)
-    print('val_a_sub:', val_a_sub)
+    print("train_a_sub:", train_a_sub)
+    print("val_a_sub:", val_a_sub)
 
     # train, val normal subjects
     train_val_normal = os.path.join(root, "train", "normal", channel_std)
@@ -173,9 +173,8 @@ if __name__ == "__main__":
         train_val_n_sub[: int(len(train_val_n_sub) * 0.8)],
         train_val_n_sub[int(len(train_val_n_sub) * 0.8) :],
     )
-    print('train_n_sub:', train_n_sub)
-    print('val_n_sub:', val_n_sub)
-
+    print("train_n_sub:", train_n_sub)
+    print("val_n_sub:", val_n_sub)
 
     # test abnormal subjects
     test_abnormal = os.path.join(root, "eval", "abnormal", channel_std)
@@ -221,4 +220,4 @@ if __name__ == "__main__":
         # Use the pool.map function to apply the square function to each element in the numbers list
         result = pool.map(split_and_dump, parameters)
 
-    print('Done!')
+    print("Done!")

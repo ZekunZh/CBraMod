@@ -7,14 +7,13 @@ from utils.util import to_tensor
 
 
 class PretrainingDataset(Dataset):
-    def __init__(
-            self,
-            dataset_dir
-    ):
+    def __init__(self, dataset_dir):
         super(PretrainingDataset, self).__init__()
-        self.db = lmdb.open(dataset_dir, readonly=True, lock=False, readahead=True, meminit=False)
+        self.db = lmdb.open(
+            dataset_dir, readonly=True, lock=False, readahead=True, meminit=False
+        )
         with self.db.begin(write=False) as txn:
-            self.keys = pickle.loads(txn.get('__keys__'.encode()))
+            self.keys = pickle.loads(txn.get("__keys__".encode()))
         # self.keys = self.keys[:100000]
 
     def __len__(self):
@@ -29,6 +28,3 @@ class PretrainingDataset(Dataset):
         patch = to_tensor(patch)
         # print(patch.shape)
         return patch
-
-
-

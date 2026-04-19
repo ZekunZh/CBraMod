@@ -5,6 +5,7 @@ Currently implimeted: resample
 """
 
 import sys
+
 import torch
 import torch.fft
 
@@ -26,7 +27,7 @@ def _isrealobj(x):
         return True
 
 
-def resample(x, num, t=None, axis=0, window=None, domain='time'):
+def resample(x, num, t=None, axis=0, window=None, domain="time"):
     """
     Resample `x` to `num` samples using Fourier method along the given axis.
 
@@ -117,9 +118,12 @@ def resample(x, num, t=None, axis=0, window=None, domain='time'):
     >>> plt.show()
     """
 
-    if domain not in ('time', 'freq'):
-        raise ValueError("Acceptable domain flags are 'time' or"
-                         " 'freq', not domain={}".format(domain))
+    if domain not in ("time", "freq"):
+        raise ValueError(
+            "Acceptable domain flags are 'time' or" " 'freq', not domain={}".format(
+                domain
+            )
+        )
 
     if hasattr(axis, "__len__") and not hasattr(num, "__len__"):
         num = [num] * len(axis)
@@ -141,14 +145,16 @@ def resample(x, num, t=None, axis=0, window=None, domain='time'):
             else:
                 return _temp, torch.stack(_t_list)
         else:
-            raise ValueError("if num is array like, then axis also has to be array like and of the same length")
+            raise ValueError(
+                "if num is array like, then axis also has to be array like and of the same length"
+            )
 
     Nx = x.shape[axis]
 
     # Check if we can use faster real FFT
     real_input = _isrealobj(x)
 
-    if domain == 'time':
+    if domain == "time":
         # Forward transform
         if real_input:
             X = torch.fft.rfft(x, dim=axis)
@@ -163,11 +169,12 @@ def resample(x, num, t=None, axis=0, window=None, domain='time'):
             W = window(torch.fft.fftfreq(Nx))
         elif isinstance(window, torch.Tensor):
             if window.shape != (Nx,):
-                raise ValueError('window must have the same length as data')
+                raise ValueError("window must have the same length as data")
             W = window
         else:
             sys.exit(
-                "Window can only be either a function or Tensor. Window generation with get_window function of scipy.signal hasn't been implimented yet.")
+                "Window can only be either a function or Tensor. Window generation with get_window function of scipy.signal hasn't been implimented yet."
+            )
             W = torch.fft.ifftshift(get_window(window, Nx))
 
         newshape_W = [1] * x.ndim
@@ -177,7 +184,7 @@ def resample(x, num, t=None, axis=0, window=None, domain='time'):
             W_real = W.clone()
             W_real[1:] += W_real[-1:0:-1]
             W_real[1:] *= 0.5
-            X *= W_real[:newshape_W[axis]].reshape(newshape_W)
+            X *= W_real[: newshape_W[axis]].reshape(newshape_W)
         else:
             X *= W.reshape(newshape_W)
 
@@ -211,7 +218,7 @@ def resample(x, num, t=None, axis=0, window=None, domain='time'):
         if num < Nx:  # downsampling
             if real_input:
                 sl[axis] = slice(N // 2, N // 2 + 1)
-                Y[tuple(sl)] *= 2.
+                Y[tuple(sl)] *= 2.0
             else:
                 # select the component of Y at frequency +N/2,
                 # add the component of X at -N/2
@@ -233,7 +240,7 @@ def resample(x, num, t=None, axis=0, window=None, domain='time'):
     else:
         y = torch.fft.ifft(Y, dim=axis, overwrite_x=True)
 
-    y *= (float(num) / float(Nx))
+    y *= float(num) / float(Nx)
 
     if t is None:
         return y

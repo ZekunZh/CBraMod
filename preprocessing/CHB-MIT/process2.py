@@ -1,8 +1,9 @@
-import pickle
+import multiprocessing as mp
 import os
+import pickle
+
 import numpy as np
 from tqdm import tqdm
-import multiprocessing as mp
 
 root = "/data/datasets/BigDownstream/chb-mit/processed"
 out = "/data/datasets/BigDownstream/chb-mit/processed_seg"

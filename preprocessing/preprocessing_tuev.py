@@ -1,7 +1,8 @@
-import mne
-import numpy as np
 import os
 import pickle
+
+import mne
+import numpy as np
 from tqdm import tqdm
 
 """
@@ -114,7 +115,7 @@ def readEDF(fileName):
     Rawdata.notch_filter((60))
 
     _, times = Rawdata[:]
-    signals = Rawdata.get_data(units='uV')
+    signals = Rawdata.get_data(units="uV")
     RecFile = fileName[0:-3] + "rec"
     eventData = np.genfromtxt(RecFile, delimiter=",")
     Rawdata.close()
@@ -198,7 +199,7 @@ load_up_objects(
 )
 
 
-#transfer to train, eval, and test
+# transfer to train, eval, and test
 root = "/data/datasets/BigDownstream/TUEV_refine"
 # seed = 4523
 # np.random.seed(seed)
@@ -219,18 +220,24 @@ val_files = [f for f in train_files if f.split("_")[0] in val_sub]
 train_files = [f for f in train_files if f.split("_")[0] in train_sub]
 
 
-if not os.path.exists(os.path.join(root, 'processed', 'processed_train')):
-    os.makedirs(os.path.join(root, 'processed', 'processed_train'))
-if not os.path.exists(os.path.join(root, 'processed', 'processed_eval')):
-    os.makedirs(os.path.join(root, 'processed', 'processed_eval'))
-if not os.path.exists(os.path.join(root, 'processed', 'processed_test')):
-    os.makedirs(os.path.join(root, 'processed', 'processed_test'))
+if not os.path.exists(os.path.join(root, "processed", "processed_train")):
+    os.makedirs(os.path.join(root, "processed", "processed_train"))
+if not os.path.exists(os.path.join(root, "processed", "processed_eval")):
+    os.makedirs(os.path.join(root, "processed", "processed_eval"))
+if not os.path.exists(os.path.join(root, "processed", "processed_test")):
+    os.makedirs(os.path.join(root, "processed", "processed_test"))
 
 for file in tqdm(train_files):
-    os.system(f"cp {os.path.join(root, 'processed_train', file)} {os.path.join(root, 'processed', 'processed_train')}")
+    os.system(
+        f"cp {os.path.join(root, 'processed_train', file)} {os.path.join(root, 'processed', 'processed_train')}"
+    )
 for file in tqdm(val_files):
-    os.system(f"cp {os.path.join(root, 'processed_train', file)} {os.path.join(root, 'processed', 'processed_eval')}")
+    os.system(
+        f"cp {os.path.join(root, 'processed_train', file)} {os.path.join(root, 'processed', 'processed_eval')}"
+    )
 for file in tqdm(test_files):
-    os.system(f"cp {os.path.join(root, 'processed_eval', file)} {os.path.join(root, 'processed', 'processed_test')}")
+    os.system(
+        f"cp {os.path.join(root, 'processed_eval', file)} {os.path.join(root, 'processed', 'processed_test')}"
+    )
 
-print('Done!')
+print("Done!")

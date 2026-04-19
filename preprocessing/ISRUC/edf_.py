@@ -16,15 +16,14 @@ import re
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
-from scipy.interpolate import interp1d
-
 from mne._fiff.constants import FIFF
 from mne._fiff.meas_info import _empty_info, _unique_channel_names
 from mne._fiff.utils import _blk_read_lims, _mult_cal_one
 from mne.annotations import Annotations
 from mne.filter import resample
-from mne.utils import _validate_type, fill_doc, logger, verbose, warn
 from mne.io.base import BaseRaw, _get_scaling
+from mne.utils import _validate_type, fill_doc, logger, verbose, warn
+from scipy.interpolate import interp1d
 
 # common channel type names mapped to internal ch types
 CH_TYPE_MAPPING = {
@@ -924,7 +923,7 @@ def _read_edf_header(fname, exclude, infer_types, include=None):
             if i in exclude:
                 continue
             # allow μ (greek mu), µ (micro symbol) and μ (sjis mu) codepoints
-            if unit in ("\u03BCV", "\u00B5V", "\x83\xCAV", "uV"):
+            if unit in ("\u03bcV", "\u00b5V", "\x83\xcaV", "uV"):
                 edf_info["units"].append(1e-6)
             elif unit == "mV":
                 edf_info["units"].append(1e-3)
