@@ -1,48 +1,50 @@
-import scipy
-from scipy import signal
 import os
-import lmdb
 import pickle
 
-root_dir = '/data/datasets/shu_datasets/mat'
+import lmdb
+import scipy
+from scipy import signal
+
+root_dir = "/home/zekun/projects/0-jobs/SigmaNova/data/mat_files/mat"
+processed_dir = "/home/zekun/projects/0-jobs/SigmaNova/data/processed"
 files = [file for file in os.listdir(root_dir)]
 files = sorted(files)
-# print(files)
+print(len(files))
 
 files_dict = {
-    'train':files[:75],
-    'val':files[75:100],
-    'test':files[100:],
+    "train": files[:75],
+    "val": files[75:100],
+    "test": files[100:],
 }
 
 dataset = {
-    'train': list(),
-    'val': list(),
-    'test': list(),
+    "train": list(),
+    "val": list(),
+    "test": list(),
 }
-db = lmdb.open('/data/datasets/shu_datasets/processed', map_size=110612736)
+
+os.makedirs(processed_dir, exist_ok=True)
+db = lmdb.open(processed_dir, map_size=1099511627776)
 for files_key in files_dict.keys():
     for file in files_dict[files_key]:
         data = scipy.io.loadmat(os.path.join(root_dir, file))
-        eeg = data['data']
-        labels = data['labels'][0]
+        eeg = data["data"]
+        labels = data["labels"][0]
         bz, ch_num, points = eeg.shape
         print(eeg.shape)
         eeg_resample = signal.resample(eeg, 800, axis=2)
         eeg_ = eeg_resample.reshape(bz, ch_num, 4, 200)
         print(eeg_.shape, labels.shape)
         for i, (sample, label) in enumerate(zip(eeg_, labels)):
-            sample_key = f'{file[:-4]}-{i}'
+            sample_key = f"{file[:-4]}-{i}"
             # print(sample_key)
-            data_dict = {
-                'sample':sample, 'label':label-1
-            }
+            data_dict = {"sample": sample, "label": label - 1}
             txn = db.begin(write=True)
             txn.put(key=sample_key.encode(), value=pickle.dumps(data_dict))
             txn.commit()
             dataset[files_key].append(sample_key)
 
 txn = db.begin(write=True)
-txn.put(key='__keys__'.encode(), value=pickle.dumps(dataset))
+txn.put(key="__keys__".encode(), value=pickle.dumps(dataset))
 txn.commit()
 db.close()
